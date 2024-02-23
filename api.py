@@ -47,6 +47,29 @@ async def get_nearby_places(latitude: float, longitude: float, radius: int = 500
     except Exception as e:
         return HTTPException(status_code=500, detail=str(e))
 
+# @app.post("/get-nutrition/")
+# async def get_nutrition(files: List[UploadFile] = File(...), user_message: Optional[str] = None):
+#     image_contents = []
+#     for file in files:
+#         # Read image file and encode
+#         contents = await file.read()
+#         base64_image = encode_image(contents, file.content_type)  # Now passing MIME type to encode_image
+#         image_contents.append({
+#             "type": "image_url",
+#             "image_url": {"url": f"data:{file.content_type if file.content_type != 'image/heic' else 'image/jpeg'};base64,{base64_image}"}
+#         })
+#         file.file.close()  # Make sure to close the file
+
+#     if not image_contents:
+#         raise HTTPException(status_code=400, detail="No images provided")
+
+#     # Here you should adjust according to how your nutrition_api.get_nutritional_details is implemented
+#     try:
+#         response = nutrition_api.get_nutritional_details(image_contents,, user_message=user_message)
+#         return JSONResponse(content=response)
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/get-nutrition/")
 async def get_nutrition(files: list[UploadFile] = File(...), user_message: Optional[str] = None):
     image_paths = []
@@ -64,7 +87,7 @@ async def get_nutrition(files: list[UploadFile] = File(...), user_message: Optio
         raise HTTPException(status_code=400, detail="No images provided")
 
     try:
-        response = nutrition_api.get_nutritional_details(image_paths,user_message=user_message)
+        response = nutrition_api.get_nutritional_details(image_paths, content_type=file.content_type, user_message=user_message)
         # Clean up: remove temporary files after processing
         for path in image_paths:
             os.remove(path)

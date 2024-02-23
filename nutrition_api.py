@@ -228,7 +228,7 @@ abilities: dalle,browser,python, image recognition
 
 """
 
-def get_nutritional_details(image_paths, user_message=None):
+def get_nutritional_details(image_paths, content_type, user_message=None):
     api_key = os.getenv('OPENAI_API_KEY')
     headers = {
         "Content-Type": "application/json",
@@ -241,7 +241,7 @@ def get_nutritional_details(image_paths, user_message=None):
 
     image_content = [{"type": "text", "text": user_message}]
     for image_path in image_paths:
-        base64_image = encode_image(image_path)
+        base64_image = encode_image(image_path, content_type)
         image_content.append({
             "type": "image_url",
             "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
