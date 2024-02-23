@@ -1,3 +1,4 @@
+# nutrition_api.py
 import base64
 import requests
 import os
@@ -231,35 +232,65 @@ abilities: dalle,browser,python, image recognition
 
 """
 
-def get_nutritional_details(image_paths, user_message=None):
+# def get_nutritional_details(image_paths, user_message=None):
+#     api_key = os.getenv('OPENAI_API_KEY')
+#     headers = {
+#         "Content-Type": "application/json",
+#         "Authorization": f"Bearer {api_key}"
+#     }
+
+
+#     if user_message is None:
+#         user_message = "Tell me the nutritional details about this food for my dog"
+
+#     image_content = [{"type": "text", "text": user_message}]
+#     for image_path in image_paths:
+#         base64_image = encode_image(image_path)
+#         image_content.append({
+#             "type": "image_url",
+#             "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
+#         })
+
+#     payload = {
+#         "model": "gpt-4-vision-preview",
+#         "messages": [
+#             {
+#                 "role": "system",
+#                 "content": system_message,
+#             },
+#             {
+#                 "role": "user",
+#                 "content": image_content
+#             }
+#         ],
+#         "max_tokens": 300
+#     }
+
+#     response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+#     return response.json()
+
+def get_nutritional_details(image_contents, user_message=None):
     api_key = os.getenv('OPENAI_API_KEY')
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}"
     }
 
-
     if user_message is None:
         user_message = "Tell me the nutritional details about this food for my dog"
 
-    image_content = [{"type": "text", "text": user_message}]
-    for image_path in image_paths:
-        base64_image = encode_image(image_path)
-        image_content.append({
-            "type": "image_url",
-            "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
-        })
+    payload_content = [{"type": "text", "text": user_message}] + image_contents
 
     payload = {
         "model": "gpt-4-vision-preview",
         "messages": [
             {
                 "role": "system",
-                "content": system_message,
+                "content": "Please analyze the following images for nutritional details.",
             },
             {
                 "role": "user",
-                "content": image_content
+                "content": payload_content
             }
         ],
         "max_tokens": 300
