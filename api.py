@@ -73,21 +73,30 @@ async def get_nearby_places(latitude: float, longitude: float, radius: int = 500
 @app.post("/get-nutrition/")
 async def get_nutrition(files: list[UploadFile] = File(...), user_message: Optional[str] = None):
     image_paths = []
+    image_contents = []
     for file in files:
         # Save temporary image file
-        try:
-            temp_file_path = f"temp_{file.filename}"
-            with open(temp_file_path, "wb") as buffer:
-                shutil.copyfileobj(file.file, buffer)
-            image_paths.append(temp_file_path)
-        finally:
-            file.file.close()
+        contents = await file.read()
+        base64_image = encode_image(contents, file.content_type)  # Now passing MIME type to encode_image
+        image_contents.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:{file.content_type if file.content_type != 'image/heic' else 'image/jpeg'};base64,{base64_image}"}
+        })
+        file.file.close()
 
-    if not image_paths:
+        # try:
+        #     temp_file_path = f"temp_{file.filename}"
+        #     with open(temp_file_path, "wb") as buffer:
+        #         shutil.copyfileobj(file.file, buffer)
+        #     image_paths.append(temp_file_path)
+        # finally:
+        #     file.file.close()
+
+    if not image_contents:
         raise HTTPException(status_code=400, detail="No images provided")
 
     try:
-        response = nutrition_api.get_nutritional_details(image_paths, content_type=file.content_type, user_message=user_message)
+        response = nutrition_api.get_nutritional_details(image_contents, content_type=file.content_type, user_message=user_message)
         # Clean up: remove temporary files after processing
         for path in image_paths:
             os.remove(path)
