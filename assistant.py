@@ -3,6 +3,7 @@ import os
 import time
 from dotenv import load_dotenv
 from openai import OpenAI, AsyncOpenAI
+import asyncio
 
 load_dotenv()
 api_key = os.getenv('OPENAI_API_KEY')
@@ -67,62 +68,120 @@ print('file upload completed')
 # print('----> assistant created')
 # print('dog_trainer_assis.id : ',dog_trainer_assis.id)
 
-dog_trainer_assis_id = 'asst_D4WWS4ts0Y6VW3kWvkmIryg0'
-thread_id = 'thread_H94aRyAhpbE8TjPapEt1l1vQ'
+# dog_trainer_assis_id = 'asst_D4WWS4ts0Y6VW3kWvkmIryg0'
+# thread_id = 'thread_H94aRyAhpbE8TjPapEt1l1vQ'
 
-# == Step 3. Create a Thread
+# # == Step 3. Create a Thread
 
-user_message = "my dog is chewing my chair ?"
+# user_message = "my dog is chewing my chair ?"
 
-# thread = client.beta.threads.create()
-# thread_id = thread.id
-# print('thread_id : ',thread_id)
+# # thread = client.beta.threads.create()
+# # thread_id = thread.id
+# # print('thread_id : ',thread_id)
 
-message = client.beta.threads.messages.create(
-    thread_id=thread_id,
-    role="user",
-    content=user_message
-)
+# message = client.beta.threads.messages.create(
+#     thread_id=thread_id,
+#     role="user",
+#     content=user_message
+# )
 
-run = client.beta.threads.runs.create(
-    thread_id=thread_id,
-    assistant_id=dog_trainer_assis_id,
-    instructions="Please address the user as Bruce",
-)
+# run = client.beta.threads.runs.create(
+#     thread_id=thread_id,
+#     assistant_id=dog_trainer_assis_id,
+#     instructions="Please address the user as Bruce",
+# )
 
-def wait_for_run_completion(client, thread_id, run_id, sleep_interval=5):
+# def wait_for_run_completion(client, thread_id, run_id, sleep_interval=5):
+#     """
+#     Waits for a run to complete and prints the elapsed time.:param client: The OpenAI client object.
+#     :param thread_id: The ID of the thread.
+#     :param run_id: The ID of the run.
+#     :param sleep_interval: Time in seconds to wait between checks.
+#     """
+#     while True:
+#         try:
+#             run = client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run_id)
+#             if run.completed_at:
+#                 elapsed_time = run.completed_at - run.created_at
+#                 formatted_elapsed_time = time.strftime(
+#                     "%H:%M:%S", time.gmtime(elapsed_time)
+#                 )
+#                 print(f"Run completed in {formatted_elapsed_time}")
+#                 logging.info(f"Run completed in {formatted_elapsed_time}")
+#                 # Get messages here once Run is completed!
+#                 messages = client.beta.threads.messages.list(thread_id=thread_id)
+#                 last_message = messages.data[0]
+#                 response = last_message.content[0].text.value
+#                 print(f"Assistant Response: {response}")
+#                 break
+#         except Exception as e:
+#             logging.error(f"An error occurred while retrieving the run: {e}")
+#             break
+#         logging.info("Waiting for run to complete...")
+#         time.sleep(sleep_interval)
+
+
+# # == Run it
+# wait_for_run_completion(client=client, thread_id=thread_id, run_id=run.id)
+
+# # === Check the Run Steps - LOGS ===
+# run_steps = client.beta.threads.runs.steps.list(thread_id=thread_id, run_id=run.id)
+# print(f"Run Steps --> {run_steps.data[0]}")
+
+
+async def main():
+    client = AsyncOpenAI(api_key=api_key)
+
+    # == Step 1. Upload a file
+    file_object = await client.files.create(
+        file=open("Puppy_training.pdf", "rb"),
+        purpose='assistants',
+    )
+    print('file upload completed')
+
+    dog_trainer_assis_id = 'asst_D4WWS4ts0Y6VW3kWvkmIryg0'
+    thread_id = 'thread_H94aRyAhpbE8TjPapEt1l1vQ'
+
+    # == Step 3. Create a Thread
+    user_message = "my dog is chewing my chair ?"
+    message = await client.beta.threads.messages.create(
+        thread_id=thread_id,
+        role="user",
+        content=user_message
+    )
+
+    run = await client.beta.threads.runs.create(
+        thread_id=thread_id,
+        assistant_id=dog_trainer_assis_id,
+        instructions="Please address the user as Bruce",
+    )
+
+    await wait_for_run_completion(client, thread_id, run.id)
+
+async def wait_for_run_completion(client, thread_id, run_id, sleep_interval=5):
     """
-    Waits for a run to complete and prints the elapsed time.:param client: The OpenAI client object.
-    :param thread_id: The ID of the thread.
-    :param run_id: The ID of the run.
-    :param sleep_interval: Time in seconds to wait between checks.
+    Waits for a run to complete and prints the elapsed time.
     """
     while True:
         try:
-            run = client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run_id)
+            run = await client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run_id)
             if run.completed_at:
                 elapsed_time = run.completed_at - run.created_at
-                formatted_elapsed_time = time.strftime(
-                    "%H:%M:%S", time.gmtime(elapsed_time)
-                )
+                formatted_elapsed_time = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
                 print(f"Run completed in {formatted_elapsed_time}")
                 logging.info(f"Run completed in {formatted_elapsed_time}")
                 # Get messages here once Run is completed!
-                messages = client.beta.threads.messages.list(thread_id=thread_id)
-                last_message = messages.data[0]
-                response = last_message.content[0].text.value
+                messages = await client.beta.threads.messages.list(thread_id=thread_id)
+                last_message = messages.data[-1]  # Assuming you want the last message
+                response = last_message.content
                 print(f"Assistant Response: {response}")
                 break
         except Exception as e:
             logging.error(f"An error occurred while retrieving the run: {e}")
             break
         logging.info("Waiting for run to complete...")
-        time.sleep(sleep_interval)
-
+        await asyncio.sleep(sleep_interval)
 
 # == Run it
-wait_for_run_completion(client=client, thread_id=thread_id, run_id=run.id)
-
-# === Check the Run Steps - LOGS ===
-run_steps = client.beta.threads.runs.steps.list(thread_id=thread_id, run_id=run.id)
-print(f"Run Steps --> {run_steps.data[0]}")
+if __name__ == "__main__":
+    asyncio.run(main())
