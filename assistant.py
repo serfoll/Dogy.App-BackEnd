@@ -2,13 +2,13 @@ import logging
 import os
 import time
 from dotenv import load_dotenv
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI
 
 load_dotenv()
 api_key = os.getenv('OPENAI_API_KEY')
 model='gpt-4-0125-preview'
 
-client = OpenAI(api_key=api_key)
+client = AsyncOpenAI(api_key=api_key)
 
 # == Step 1. Upload a file
 file_object = client.files.create(
@@ -22,7 +22,7 @@ print('file upload completed')
 
 # dog_trainer_ass_prompt='''# MISSION
 # To empower dog owners with expert guidance and tools for improving their dogs' training, behavior, and overall care, fostering a harmonious and enriching relationship between dogs and their owners through specialized education, tailored training plans, and engaging mental stimulation activities.
-# #agents #training 
+# #agents #training
 # # GOAL
 # Integrate a suite of functionalities designed to offer mental stimulation, create personalized training strategies, solve behavioral problems, and provide comprehensive education on responsible pet ownership.
 
@@ -79,8 +79,8 @@ user_message = "my dog is chewing my chair ?"
 # print('thread_id : ',thread_id)
 
 message = client.beta.threads.messages.create(
-    thread_id=thread_id, 
-    role="user", 
+    thread_id=thread_id,
+    role="user",
     content=user_message
 )
 
@@ -126,8 +126,3 @@ wait_for_run_completion(client=client, thread_id=thread_id, run_id=run.id)
 # === Check the Run Steps - LOGS ===
 run_steps = client.beta.threads.runs.steps.list(thread_id=thread_id, run_id=run.id)
 print(f"Run Steps --> {run_steps.data[0]}")
-
-
-
-
-
