@@ -1,4 +1,5 @@
 # api.py
+import keyword
 from fastapi import FastAPI, HTTPException, BackgroundTasks, File, UploadFile
 import requests
 from dotenv import load_dotenv
@@ -29,11 +30,14 @@ async def get_nearby_places(latitude: float, longitude: float, radius: int = 500
         raise HTTPException(status_code=500, detail="API key not found")
 
     base_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+    keyword = "dog-friendly"
+
     params = {
         "location": f"{latitude},{longitude}",
         "radius": radius,
         "type": place_type,
-        "key": api_key
+        "key": api_key,
+        "keyword": keyword
     }
 
     try:
@@ -47,28 +51,6 @@ async def get_nearby_places(latitude: float, longitude: float, radius: int = 500
     except Exception as e:
         return HTTPException(status_code=500, detail=str(e))
 
-# @app.post("/get-nutrition/")
-# async def get_nutrition(files: List[UploadFile] = File(...), user_message: Optional[str] = None):
-#     image_contents = []
-#     for file in files:
-#         # Read image file and encode
-#         contents = await file.read()
-#         base64_image = encode_image(contents, file.content_type)  # Now passing MIME type to encode_image
-#         image_contents.append({
-#             "type": "image_url",
-#             "image_url": {"url": f"data:{file.content_type if file.content_type != 'image/heic' else 'image/jpeg'};base64,{base64_image}"}
-#         })
-#         file.file.close()  # Make sure to close the file
-
-#     if not image_contents:
-#         raise HTTPException(status_code=400, detail="No images provided")
-
-#     # Here you should adjust according to how your nutrition_api.get_nutritional_details is implemented
-#     try:
-#         response = nutrition_api.get_nutritional_details(image_contents,, user_message=user_message)
-#         return JSONResponse(content=response)
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/get-nutrition/")
 async def get_nutrition(files: list[UploadFile] = File(...), user_message: Optional[str] = None):
@@ -84,13 +66,6 @@ async def get_nutrition(files: list[UploadFile] = File(...), user_message: Optio
         })
         file.file.close()
 
-        # try:
-        #     temp_file_path = f"temp_{file.filename}"
-        #     with open(temp_file_path, "wb") as buffer:
-        #         shutil.copyfileobj(file.file, buffer)
-        #     image_paths.append(temp_file_path)
-        # finally:
-        #     file.file.close()
 
     if not image_contents:
         raise HTTPException(status_code=400, detail="No images provided")
