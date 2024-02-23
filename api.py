@@ -52,22 +52,23 @@ async def get_nutrition(files: List[UploadFile] = File(...), user_message: Optio
     for file in files:
         # Read image file and encode
         contents = await file.read()
-        base64_image, mime_type = encode_image(contents)  # Adjust encode_image to return mime_type if necessary
+        base64_image = encode_image(contents, file.content_type)  # Now passing MIME type to encode_image
         image_contents.append({
             "type": "image_url",
-            "image_url": {"url": f"data:{mime_type};base64,{base64_image}"}
+            "image_url": {"url": f"data:{file.content_type if file.content_type != 'image/heic' else 'image/jpeg'};base64,{base64_image}"}
         })
         file.file.close()  # Make sure to close the file
 
     if not image_contents:
         raise HTTPException(status_code=400, detail="No images provided")
 
-    # Adjust the get_nutritional_details function call if necessary
+    # Here you should adjust according to how your nutrition_api.get_nutritional_details is implemented
     try:
         response = nutrition_api.get_nutritional_details(image_contents, user_message=user_message)
         return JSONResponse(content=response)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 class AssistantRequest(BaseModel):
     name: str
     instructions: str
