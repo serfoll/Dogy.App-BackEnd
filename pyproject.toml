@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "dogy-assistant-openai"
+version = "0.1.0"
+description = ""
+authors = ["Anant Govil <44673944+a-govil@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+openai = "^1.12.0"
+python-dotenv = "^1.0.1"
+requests = "^2.31.0"
+
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
