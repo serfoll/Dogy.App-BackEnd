@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, File, UploadFile
 import requests
 from dotenv import load_dotenv
 import os
@@ -10,7 +10,7 @@ import nutrition_api
 import assistant
 import shutil
 import os
-
+from helpers import encode_image
 # Load environment variables from .env file
 load_dotenv()
 
@@ -26,7 +26,7 @@ async def get_nearby_places(latitude: float, longitude: float, radius: int = 500
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="API key not found")
-    
+
     base_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
     params = {
         "location": f"{latitude},{longitude}",
@@ -34,7 +34,7 @@ async def get_nearby_places(latitude: float, longitude: float, radius: int = 500
         "type": place_type,
         "key": api_key
     }
-    
+
     try:
         response = requests.get(base_url, params=params)
         if response.status_code == 200:
@@ -47,31 +47,26 @@ async def get_nearby_places(latitude: float, longitude: float, radius: int = 500
         return HTTPException(status_code=500, detail=str(e))
 
 @app.post("/get-nutrition/")
-async def get_nutrition(files: list[UploadFile] = File(...), user_message: Optional[str] = None):
-    image_paths = []
+async def get_nutrition(files: List[UploadFile] = File(...), user_message: Optional[str] = None):
+    image_contents = []
     for file in files:
-        # Save temporary image file
-        try:
-            temp_file_path = f"temp_{file.filename}"
-            with open(temp_file_path, "wb") as buffer:
-                shutil.copyfileobj(file.file, buffer)
-            image_paths.append(temp_file_path)
-        finally:
-            file.file.close()
+        # Read image file and encode
+        contents = await file.read()
+        base64_image, mime_type = encode_image(contents)  # Adjust encode_image to return mime_type if necessary
+        image_contents.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:{mime_type};base64,{base64_image}"}
+        })
+        file.file.close()  # Make sure to close the file
 
-    if not image_paths:
+    if not image_contents:
         raise HTTPException(status_code=400, detail="No images provided")
 
+    # Adjust the get_nutritional_details function call if necessary
     try:
-        response = nutrition_api.get_nutritional_details(image_paths,user_message=user_message)
-        # Clean up: remove temporary files after processing
-        for path in image_paths:
-            os.remove(path)
+        response = nutrition_api.get_nutritional_details(image_contents, user_message=user_message)
         return JSONResponse(content=response)
     except Exception as e:
-        # Clean up: remove temporary files in case of an error
-        for path in image_paths:
-            os.remove(path)
         raise HTTPException(status_code=500, detail=str(e))
 class AssistantRequest(BaseModel):
     name: str
