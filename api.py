@@ -48,26 +48,31 @@ async def get_nearby_places(latitude: float, longitude: float, radius: int = 500
         return HTTPException(status_code=500, detail=str(e))
 
 @app.post("/get-nutrition/")
-async def get_nutrition(files: List[UploadFile] = File(...), user_message: Optional[str] = None):
-    image_contents = []
+async def get_nutrition(files: list[UploadFile] = File(...), user_message: Optional[str] = None):
+    image_paths = []
     for file in files:
-        # Read image file and encode
-        contents = await file.read()
-        base64_image = encode_image(contents, file.content_type)  # Now passing MIME type to encode_image
-        image_contents.append({
-            "type": "image_url",
-            "image_url": {"url": f"data:{file.content_type if file.content_type != 'image/heic' else 'image/jpeg'};base64,{base64_image}"}
-        })
-        file.file.close()  # Make sure to close the file
+        # Save temporary image file
+        try:
+            temp_file_path = f"temp_{file.filename}"
+            with open(temp_file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            image_paths.append(temp_file_path)
+        finally:
+            file.file.close()
 
-    if not image_contents:
+    if not image_paths:
         raise HTTPException(status_code=400, detail="No images provided")
 
-    # Here you should adjust according to how your nutrition_api.get_nutritional_details is implemented
     try:
-        response = nutrition_api.get_nutritional_details(image_contents, user_message=user_message)
+        response = nutrition_api.get_nutritional_details(image_paths,user_message=user_message)
+        # Clean up: remove temporary files after processing
+        for path in image_paths:
+            os.remove(path)
         return JSONResponse(content=response)
     except Exception as e:
+        # Clean up: remove temporary files in case of an error
+        for path in image_paths:
+            os.remove(path)
         raise HTTPException(status_code=500, detail=str(e))
 
 class AssistantRequest(BaseModel):
