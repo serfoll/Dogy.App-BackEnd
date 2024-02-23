@@ -239,13 +239,7 @@ def get_nutritional_details(image_paths, content_type, user_message=None):
     if user_message is None:
         user_message = "Tell me the nutritional details about this food for my dog"
 
-    image_content = [{"type": "text", "text": user_message}]
-    for image_path in image_paths:
-        base64_image = encode_image(image_path, content_type)
-        image_content.append({
-            "type": "image_url",
-            "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
-        })
+    image_content = [{"type": "text", "text": user_message}] + image_paths
 
     payload = {
         "model": "gpt-4-vision-preview",
