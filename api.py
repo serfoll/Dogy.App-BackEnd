@@ -1,5 +1,4 @@
 # api.py
-import keyword
 from fastapi import FastAPI, HTTPException, BackgroundTasks, File, UploadFile
 import requests
 from dotenv import load_dotenv
@@ -9,8 +8,7 @@ from fastapi.responses import JSONResponse
 from typing import List, Optional
 from pydantic import BaseModel
 import nutrition_api
-import assistant
-import shutil
+from dogy_companion import ask_dogy
 import os
 from helpers import encode_image
 # Load environment variables from .env file
@@ -82,39 +80,15 @@ async def get_nutrition(files: list[UploadFile] = File(...), user_message: Optio
             os.remove(path)
         raise HTTPException(status_code=500, detail=str(e))
 
-class AssistantRequest(BaseModel):
+#ask dogy
+class DogyRequest(BaseModel):
+    message: str
     name: str
-    instructions: str
-    model: str
-    file_ids: List[str]
 
-class MessageRequest(BaseModel):
-    thread_id: str
-    assistant_id: str
-    user_message: str
-
-@app.post("/create-assistant/")
-async def create_assistant_endpoint(request: AssistantRequest):
-    assistant_id = assistant.create_assistant(
-        name=request.name,
-        instructions=request.instructions,
-        model=request.model,
-        file_ids=request.file_ids
-    )
-    if assistant_id:
-        return {"assistant_id": assistant_id}
-    else:
-        raise HTTPException(status_code=500, detail="Failed to create assistant")
-
-@app.post("/send-message/")
-def send_message_endpoint(request: MessageRequest, background_tasks: BackgroundTasks):
-    def background_response(thread_id, assistant_id, user_message):
-        response = assistant.send_message_and_wait_for_response(
-            thread_id=thread_id,
-            assistant_id=assistant_id,
-            user_message=user_message
-        )
-        return response
-
-    background_tasks.add_task(background_response, request.thread_id, request.assistant_id, request.user_message)
-    return {"message": "Processing your request in the background"}
+@app.post('/askdogy/')
+async def ask_dogy_endpoint(request: DogyRequest):
+    try:
+        response = await ask_dogy(request.message, request.name)
+        return {"response": response}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

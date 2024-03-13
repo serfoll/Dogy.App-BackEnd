@@ -228,7 +228,7 @@ abilities: dalle,browser,python, image recognition
 
 """
 
-def get_nutritional_details(image_paths, content_type, user_message=None):
+def get_nutritional_details(image_paths, user_message=None):
     api_key = os.getenv('OPENAI_API_KEY')
     headers = {
         "Content-Type": "application/json",
