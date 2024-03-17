@@ -69,7 +69,7 @@ async def get_nutrition(files: list[UploadFile] = File(...), user_message: Optio
         raise HTTPException(status_code=400, detail="No images provided")
 
     try:
-        response = nutrition_api.get_nutritional_details(image_contents, content_type=file.content_type, user_message=user_message)
+        response = nutrition_api.get_nutritional_details(image_contents, user_message=user_message)
         # Clean up: remove temporary files after processing
         for path in image_paths:
             os.remove(path)
