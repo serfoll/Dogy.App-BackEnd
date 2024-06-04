@@ -11,6 +11,11 @@ import nutrition_api
 from dogy_companion import ask_dogy
 import os
 from helpers import encode_image
+import logging
+import sys
+
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -18,7 +23,7 @@ app = FastAPI()
 
 @app.get("/")
 async def my_first_get_api():
-    return {"message": "First FastAPI example"}
+    return {"message": "Dogy Assistant API"}
 
 @app.get("/nearby-places/")
 async def get_nearby_places(latitude: float, longitude: float, radius: int = 500, place_type: str = 'restaurant'):

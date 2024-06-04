@@ -14,6 +14,7 @@ openai_key = os.getenv("OPENAI_API_KEY")
 
 
 async def ask_dogy(user_message: str , user_name: str):
+  print(f"Asking Dogy {openai_key}")
   client = AsyncOpenAI(api_key=openai_key)
   dogy = await client.beta.assistants.retrieve(assistant_id=dogy_id)
   thread = await client.beta.threads.create()
