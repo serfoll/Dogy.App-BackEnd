@@ -1,5 +1,5 @@
 # api.py
-from fastapi import FastAPI, HTTPException, BackgroundTasks, File, UploadFile
+from fastapi import FastAPI, HTTPException, BackgroundTasks, File, UploadFile, Header
 import requests
 from dotenv import load_dotenv
 import os
@@ -23,7 +23,7 @@ app = FastAPI()
 
 @app.get("/")
 async def my_first_get_api():
-    return {"message": "Dogy Assistant API"}
+    return {"message": "Azure: Dogy Assistant API"}
 
 @app.get("/nearby-places/")
 async def get_nearby_places(latitude: float, longitude: float, radius: int = 500, place_type: str = 'restaurant'):
