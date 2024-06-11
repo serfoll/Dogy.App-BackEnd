@@ -86,6 +86,7 @@ async def get_nutrition(files: list[UploadFile] = File(...), user_message: Optio
         raise HTTPException(status_code=500, detail=str(e))
 
 #ask dogy
+# DogyRequest model
 class DogyRequest(BaseModel):
     message: str
     name: str
